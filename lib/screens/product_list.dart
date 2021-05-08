@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite_demo/data/dbHelper.dart';
 import 'package:sqflite_demo/models/product.dart';
+import 'package:sqflite_demo/screens/product_add.dart';
+import 'package:sqflite_demo/screens/product_detail.dart';
 
 class ProductList extends StatefulWidget{
   @override
@@ -16,11 +18,7 @@ class _ProductListState extends State {
 
   @override
   void initState() {
-    var productsFuture = dbHelper.getProducts();
-    productsFuture.then((data){
-      this.products = data;
-    });
-
+    getProducts();
   }
 
   @override
@@ -30,10 +28,16 @@ class _ProductListState extends State {
         title: Text("Ürün Listesi"),
       ),
       body: buildProductList(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){goToProductAdd();},
+        child: Icon(Icons.add),
+        tooltip: "Yeni ürün ekle",
+      ),
     );
   }
 
   ListView buildProductList() {
+
     return ListView.builder(
       itemCount: productCount,
       itemBuilder: (BuildContext context, int position){
@@ -44,9 +48,40 @@ class _ProductListState extends State {
             leading: CircleAvatar(backgroundColor: Colors.black12,child: Text("p"),),
             title: Text(this.products[position].name),
             subtitle: Text(this.products[position].description),
-            onTap: (){},
+            onTap: (){goToDetail(this.products[position]);},
           ),
         );
       });
+  }
+
+  void goToProductAdd() async{
+    bool result = await Navigator.push(context, MaterialPageRoute(builder: (context)=>ProductAdd()));
+    if(result !=null){
+      if(result){
+        getProducts();
+      }
+    }
+  }
+
+  void getProducts() async{
+    var productsFuture = dbHelper.getProducts();
+    productsFuture.then((data){
+
+      setState(() {
+        this.products = data;
+        productCount = data.length;
+      });
+
+    });
+
+  }
+
+  void goToDetail(Product product) async{
+    bool result = await Navigator.push(context, MaterialPageRoute(builder: (context)=>ProductDetail(product)));
+    if(result!=null){
+      if(result){
+        getProducts();
+      }
+    }
   }
 }
